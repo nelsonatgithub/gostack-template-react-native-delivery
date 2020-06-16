@@ -73,34 +73,72 @@ const FoodDetails: React.FC = () => {
 
   useEffect(() => {
     async function loadFood(): Promise<void> {
-      // Load a specific food with extras based on routeParams id
+      api.get(`/foods/${routeParams.id}`).then(({ data: retrievedFood }) => {
+        setFood(retrievedFood);
+        setExtras(
+          retrievedFood.extras.map(
+            (extra: Extra): Extra =>
+              ({
+                ...extra,
+                quantity: 0,
+              } as Extra),
+          ),
+        );
+      });
     }
 
     loadFood();
   }, [routeParams]);
 
   function handleIncrementExtra(id: number): void {
-    // Increment extra quantity
+    setExtras(
+      extras.map(extra => {
+        if (extra.id !== id) return extra;
+
+        return {
+          ...extra,
+          quantity: extra.quantity + 1,
+        };
+      }),
+    );
   }
 
   function handleDecrementExtra(id: number): void {
-    // Decrement extra quantity
+    setExtras(
+      extras.map(extra => {
+        if (extra.id !== id) return extra;
+
+        if (extra.quantity === 0) return extra;
+
+        return {
+          ...extra,
+          quantity: extra.quantity - 1,
+        };
+      }),
+    );
   }
 
   function handleIncrementFood(): void {
-    // Increment food quantity
+    setFoodQuantity(foodQuantity + 1);
   }
 
   function handleDecrementFood(): void {
-    // Decrement food quantity
+    if (foodQuantity === 1) return;
+    setFoodQuantity(foodQuantity - 1);
   }
 
   const toggleFavorite = useCallback(() => {
-    // Toggle if food is favorite or not
+    setIsFavorite(!isFavorite);
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
-    // Calculate cartTotal
+    const extrasTotalCost = extras
+      .map(extra => extra.value * extra.quantity)
+      .reduce((acc, value) => acc + value, 0);
+
+    const foodCost = food.price * foodQuantity;
+
+    return formatValue(foodCost + extrasTotalCost);
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
